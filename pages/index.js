@@ -2,10 +2,58 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { Inter } from '@next/font/google'
 import styles from '../styles/Home.module.css'
+import { React ,useState, useEffect } from 'react'
+import { faucetAbi, faucetContractAddress} from '../constants'
+import 'bulma/css/bulma.css'
+import { ethers } from 'ethers'
 
 const inter = Inter({ subsets: ['latin'] })
 
+//  Author:  Alireza Haghshenas https://github.com/alireza1691
+//  This is a simple faucet Dapp token and faucet smart contract was deployed before.
+
 export default function Home() {
+
+
+const [isConnected, setIsConnected] = useState(false);
+const [provider, setProvider] = useState();
+const [signer, setSigner] = useState()
+const [faucetContract, setFaucetContract] = useState()
+const [address, setAddress] = useState()
+const [getFaucetError, setGetFaucetError] = useState ('')
+
+  const conncetWalletHandler = async () => {
+    if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
+      try {
+        const accounts = await ethereum.request({method: "eth_requestAccounts"});
+        setIsConnected(true)
+        let connectedProvider = new ethers.providers.Web3Provider(window.ethereum)
+        setProvider(connectedProvider)
+        const _signer = connectedProvider.getSigner()
+        setSigner(_signer)
+        setAddress(accounts[0])
+        setFaucetContract(new ethers.Contract( faucetContractAddress , faucetAbi , provider ))
+        console.log('connected!');
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      setIsConnected(false)
+    }
+  }
+
+  const getFaucetToken = async () => {
+    setGetFaucetError("")
+    try {
+      const contractWithSigner = faucetContract.connect(signer)
+      const resp = await contractWithSigner.requestTokens()   
+    } catch (err) {
+      console.log(err.message);
+      setGetFaucetError(err.message)
+    }
+  }
+
+
   return (
     <>
       <Head>
@@ -14,109 +62,47 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <div className={styles.container}>
+      <div className='box'>
+          <nav className='level navbar-has-shadow py-1'>
+            <div className='navbar-brand'>
+              <h1>Invesweet</h1>
+               {/* <div>
+                 <ConnectButton>connect</ConnectButton>
+                </div> */}
+            </div>
+            
+            <div className='navbar-end'>
+           
+              <div className='navbar-item'>
+              
+                {/* <button onClick={''} className='button is-black mr-2' disabled>Near Wallet</button> */}
+                {/* {isConnected ? ("Connected") : (<button onClick={() => connect} className='button is-link'>Connect Wallet</button>)} */}
+                {isConnected ? (<button onClick={conncetWalletHandler} className='button is-info ' disabled>Connected</button>) : (<button onClick={conncetWalletHandler} className='button is-info button-text-bold'>Connect MetaMask </button>)}
+              </div>
+            </div>
+          </nav>
+        </div>
+    </div>
       <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>pages/index.js</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
+      <div className='box is-large'>
+      <span className='navbar-end is-link has-text-grey'>
+        {address && address.length > 0 ? `Connected to: ${address.substring(0,6)}...${address.substring(38)}` :"Please connect your wallet"}
+      </span>
+      <div className='has-text-weight-semibold py-2'>
+        <p>Get IST tokens once a day</p>
+      </div>
+      <p>These tokens are testnet token and hasn't any real value, you can use them for tesntnet transactions like Swap & Provide liquidity</p>
+      <div className='box mt-4'>
+        <label className="label">Token address : 0x9c3565DF44B79a7dbdAb3678f0B00B9Beabc7d70 </label>
+        <div className="control">
+          <div className="navbarzz-item is-hoverable navbar-end ">
+          </div>
+ 
+          <button onClick={async () => await getFaucetToken()} className='button is-link mt-2 mr-2'>Claim</button>
           </div>
         </div>
-
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-          <div className={styles.thirteen}>
-            <Image
-              src="/thirteen.svg"
-              alt="13"
-              width={40}
-              height={31}
-              priority
-            />
-          </div>
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
+      </div>
       </main>
     </>
   )
